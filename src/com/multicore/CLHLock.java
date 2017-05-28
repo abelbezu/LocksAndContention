@@ -13,16 +13,17 @@ public class CLHLock implements Lock {
      * Add your fields here
      */
     private AtomicReference<QNode> holdMyPred;
-    AtomicReference<QNode> tail;
-    ThreadLocal<QNode> myThreadLocalNode = new ThreadLocal<QNode>();
+    private AtomicReference<QNode> tail;
+    private AtomicReference<QNode> myThreadLocalNode;
 
     public CLHLock() {
-        this.tail = new AtomicReference<QNode>();
+        this.holdMyPred = new AtomicReference<>(new QNode());
+        this.myThreadLocalNode = new AtomicReference<>(new QNode());
+        this.tail =  new AtomicReference<>(new QNode());
     }
 
     public void lock() {
-        QNode pred
-                = tail.getAndSet(myThreadLocalNode.get());
+        QNode pred  = tail.getAndSet(myThreadLocalNode.get());
         this.holdMyPred.set(pred);
         while (pred.isLocked()) {}
 
@@ -49,7 +50,7 @@ public class CLHLock implements Lock {
          * Add your fields here
          */
         private AtomicBoolean locked =
-                new AtomicBoolean(true);
+                new AtomicBoolean(false);
 
         public boolean isLocked(){
             return this.locked.get();

@@ -10,18 +10,20 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 
 
 class PrimeCounter{
-    private long count = 0;
-    private CLHLock lock = new CLHLock();
+    private int count = 0;
+    private MCSLock lock = new MCSLock();
 
     public void increment(){
         int processNum = (int)(Thread.currentThread().getId()%2);
-        // critical section, lock her
         lock.lock();
-        count++;
-        // end of critical sectin, unlock here
+        try {
+            count ++;
+        } finally {
         lock.unlock();
+        }
+
     }
-    public long get(){
+    public int get(){
         return this.count;
     }
 }
@@ -61,63 +63,35 @@ class Worker extends Thread{
 }
 
 
-class Counter {
-    private long count;
-    private long end;
-    private CLHLock lock = new CLHLock();
-    public Counter(long startNum, long endNum){
-        count = startNum;
-        end = endNum;
-    }
-    public   long getAndIncrement(){
-        int processNum = (int)(Thread.currentThread().getId()%2);
 
-        lock.lock();
-        // critical section lock here;
-        try {
-            long temp = count;
-            count = temp + 1;
-        }finally {
-            lock.unlock();
-        }
-
-        // critical section ends, unlock here
-        return count;
-
-
-    }
-    public synchronized boolean isDone(){
-        return count >= end;
-    }
-}
 
 
 class DumbFinder{
-    private long startNum;
-    private long endNum;
-    private PrimeCounter counter;
-    public DumbFinder(long startNum, long endNum, PrimeCounter pc){
-        this.startNum = startNum;
-        this.endNum = endNum;
-        this.counter = pc;
-    }
-    boolean isPrime(long n) {
-        if(n < 2) return false;
-        if(n == 2 || n == 3) return true;
-        if(n%2 == 0 || n%3 == 0) return false;
-        long sqrtN = (long)Math.sqrt(n)+1;
-        for(long i = 6L; i <= sqrtN; i += 6) {
-            if(n%(i-1) == 0 || n%(i+1) == 0) return false;
-        }
-        return true;
-    }
-
-    public long findAndCount(){
-        for(long i = this.startNum; i <= this.endNum; i++){
-            if(isPrime(i)) this.counter.increment();
-        }
-        return this.counter.get();
-    }
+//    private long startNum;
+//    private long endNum;
+//    private PrimeCounter counter;
+//    public DumbFinder(long startNum, long endNum, PrimeCounter pc){
+//        this.startNum = startNum;
+//        this.endNum = endNum;
+//        this.counter = pc;
+//    }
+//    boolean isPrime(long n) {
+//        if(n < 2) return false;
+//        if(n == 2 || n == 3) return true;
+//        if(n%2 == 0 || n%3 == 0) return false;
+//        long sqrtN = (long)Math.sqrt(n)+1;
+//        for(long i = 6L; i <= sqrtN; i += 6) {
+//            if(n%(i-1) == 0 || n%(i+1) == 0) return false;
+//        }
+//        return true;
+//    }
+//
+//    public long findAndCount(){
+//        for(long i = this.startNum; i <= this.endNum; i++){
+//            if(isPrime(i)) this.counter.increment();
+//        }
+//        return this.counter.get();
+//    }
 
 }
 
