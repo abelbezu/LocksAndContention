@@ -7,20 +7,20 @@ public class MCSLock implements Lock {
     /**
      * Add your fields here
      */
-     private AtomicReference<QNode> tail;
-     private AtomicReference<QNode> myNode;
+     private AtomicReference tail;
+     ThreadLocal<QNode> myNode;
     public MCSLock() {
-        this.tail = new AtomicReference<QNode>(new QNode());
-        this.myNode = new AtomicReference<QNode>(new QNode());
+        this.tail = new AtomicReference(null);
+        this.myNode = new ThreadLocal();
     }
 
     public void lock() {
-
-        QNode pred = this.tail.getAndSet(this.myNode.get());
+        this.myNode.set(new QNode());
+        QNode pred = (QNode) this.tail.getAndSet(myNode.get());
         if (pred != null) {
-            this.myNode.get().locked = true;
-            pred.next = this.myNode.get();
-            while (pred.locked) {
+            myNode.get().locked = true;
+            pred.next = myNode.get();
+            while (myNode.get().locked) { // weird
             }
 
         }
@@ -32,7 +32,7 @@ public class MCSLock implements Lock {
                 return;
             while (this.myNode.get().next == null) {}
         }
-        this.myNode.get().next.locked = false;
+        (this.myNode.get()).next.locked = false;
 
     }
 
@@ -44,7 +44,7 @@ public class MCSLock implements Lock {
      *          true if another thread is present, else false
      */
     public boolean isContended() {
-        return false;
+        return this.tail.get() == null;
     }
 
     class QNode {

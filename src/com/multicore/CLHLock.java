@@ -12,26 +12,38 @@ public class CLHLock implements Lock {
     /**
      * Add your fields here
      */
-    private AtomicReference<QNode> holdMyPred;
+    private ThreadLocal<QNode> localPred;
     private AtomicReference<QNode> tail;
-    private AtomicReference<QNode> myThreadLocalNode;
+    private ThreadLocal<QNode> myNode;
 
     public CLHLock() {
-        this.holdMyPred = new AtomicReference<>(new QNode());
-        this.myThreadLocalNode = new AtomicReference<>(new QNode());
+        this.myNode = new ThreadLocal<QNode>() {
+            protected QNode initialValue() {
+                return new QNode();
+            }
+        };
+        this.localPred = new ThreadLocal<QNode>() {
+            protected QNode initialValue() {
+                return null;
+            }
+        };
         this.tail =  new AtomicReference<>(new QNode());
     }
 
     public void lock() {
-        QNode pred  = tail.getAndSet(myThreadLocalNode.get());
-        this.holdMyPred.set(pred);
+        QNode qNode = new QNode();
+        this.myNode.set(qNode);
+        QNode pred = new QNode();
+        this.localPred.set(qNode);
+        localPred.set(tail.getAndSet(myNode.get()));
         while (pred.isLocked()) {}
 
     }
 
     public void unlock() {
-        myThreadLocalNode.get().setLocked(false);
-        myThreadLocalNode.set(holdMyPred.get());
+        QNode qNode = myNode.get();
+        qNode.setLocked(false);
+        myNode.set(localPred.get());
     }
 
     /**
@@ -42,7 +54,7 @@ public class CLHLock implements Lock {
      *          true if another thread is present, else false
      */
     public boolean isContended() {
-        return myThreadLocalNode.get().isLocked();
+        return this.tail.get() == null; //TODO: Revisit this
     }
 
     private class QNode {

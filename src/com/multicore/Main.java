@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 
 class PrimeCounter{
     private int count = 0;
-    private MCSLock lock = new MCSLock();
+    private CLHLock lock = new CLHLock();
 
     public void increment(){
         int processNum = (int)(Thread.currentThread().getId()%2);
@@ -106,7 +106,7 @@ public class Main {
         PrimeCounter pc = new PrimeCounter();
         long startTwo = System.nanoTime();
         AtomicInteger coun = new AtomicInteger();
-        for(int i = 0; i < 2; i++)
+        for(int i = 0; i < 20; i++)
         {
             (new Worker(coun, pc)).start();
 
